@@ -2,18 +2,25 @@ from turtle import Screen, Turtle
 from paddle import Paddel
 from ball import Ball
 from bricks import Brick
+from lifes import Life
+from scoreboard import Scoreboard
+from level import Level
+from restart import Restart
 import random
 import time
 
+# creates screen
 screen = Screen()
 screen.bgcolor('lightblue')
-screen.setup(width=800, height=600)
+screen.setup(width=800, height=700)
 screen.title("Breakout Game")
 screen.tracer(0)
 
-
+# create paddle
 paddle = Paddel((0, -260))
-ball = Ball((0, -230))
+
+# create ball
+ball = Ball((0, -240))
 
 # create bricks
 bricks = []
@@ -25,34 +32,43 @@ brick_height = 20
 brick_start_x = -350
 brick_start_y = 250
 
-for row in range(brick_rows):
-    row_colors = random.choices(colors, k=brick_columns)
-    for column, color in enumerate(row_colors):
-        brick_x = brick_start_x + column * (brick_width + 10)
-        brick_y = brick_start_y - row * (brick_height + 10)
-        brick = Brick(color, brick_x, brick_y)
-        bricks.append(brick)
-
 # create lives
 lives = 3
 life_turtles = []
 life_pos_x = -330
 life_pos_y = -270
 
+#  scoreboard 
+scoreboard = Scoreboard()
+
+# set initial levels
+level = Level()
+
+# creates restart button
+# button = Restart()
+# button.setup()
+
+def create_bricks():
+    for row in range(brick_rows):
+        row_colors = random.choices(colors, k=brick_columns)
+        for column, color in enumerate(row_colors):
+            brick_x = brick_start_x + column * (brick_width + 10)
+            brick_y = brick_start_y - row * (brick_height + 10)
+            brick = Brick(color, brick_x, brick_y)
+            bricks.append(brick)
+
 for l in range(lives):
-    life =  Turtle()
-    life.shape("turtle")
-    life.setheading(90)
-    life.color('red')
-    life.penup()
-    life.goto(life_pos_x, life_pos_y)
+    life =  Life(life_pos_x, life_pos_y)
     life_turtles.append(life)
     life_pos_x += 30
 
-#keybord setting 
+#keybord setting
 screen.listen()
 screen.onkey(paddle.go_right, "Right")
 screen.onkey(paddle.go_left, "Left")
+
+#create initial bricks
+create_bricks()
 
 game_is_on = True
 while game_is_on:
@@ -67,8 +83,17 @@ while game_is_on:
         ball.bounce_y()
 
     # detect collision with paddle
-    if (ball.ycor() < -250) and (paddle.xcor() - 30 < ball.xcor() < paddle.xcor() + 30):
+    if ball.distance(paddle) < 22:
+        print(paddle.distance(ball))
         ball.bounce_y()
+
+    # collision with brcks
+    for brick in bricks:
+        if brick.distance(ball) < 20:
+            brick.goto(1000, 1000)
+            bricks.remove(brick)
+            scoreboard.increace_score()
+            ball.bounce_y()
 
     # ball misses the paddel
     if ball.ycor() < -300:
@@ -79,13 +104,36 @@ while game_is_on:
     
         if lives == 0:
             game_is_on = False
+            # button.showturtle()
             ball.reset_position()
+            scoreboard.game_over()
+            
 
-    # collision with brcks
-    for brick in bricks:
-        if brick.distance(ball) < 20:
-            brick.goto(1000, 1000)
-            bricks.remove(brick)
-            ball.bounce_y()
+    # check the bricks
+    if len(bricks) == 0:
+        level.increase_level()
+        brick.clear()
+        create_bricks()
+        paddle.reset_position()
+        ball.reset_position()
+        ball.x_move *= 0.4
+        ball.y_move *=0.4
+    
+    # Restart the game
+    # if button.is_clicked:
+    #     paddle.reset_position()
+    #     ball.reset_position()
+    #     ball.x_move = 3
+    #     ball.y_move = 3
+    #     ball.move_speed = 0
+
+    #     for brick in bricks:
+    #         brick.reset()
+
+    #     for life in life_turtles:
+    #         life.showturtle()
+
+    #     button.hideturtle()
+    #     game_is_on = True
 
 screen.exitonclick()
