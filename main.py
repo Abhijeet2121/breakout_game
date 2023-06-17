@@ -99,6 +99,7 @@ while game_is_on:
     if ball.ycor() < -300:
         ball.reset_position()
         paddle.reset_position()
+        scoreboard.reset()
         lives -= 1
         life_turtles[lives].hideturtle()
     
